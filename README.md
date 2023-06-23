@@ -1,4 +1,4 @@
-# cronjob-kubebuilder
+# cronjob-operator-kubebuilder
 // TODO(user): Add simple overview of use/purpose
 
 ## Description
