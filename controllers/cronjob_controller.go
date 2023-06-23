@@ -18,6 +18,7 @@ package controllers
 
 import (
 	"context"
+	"time"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -27,11 +28,25 @@ import (
 	batchv1 "github.com/HamzaMasood1/cronjob-operator-kubebuilder/api/v1"
 )
 
+// for real time
+type realClock struct{}
+
+func (_ realClock) Now() time.Time {
+	return time.Now()
+}
+
+type Clock interface {
+	Now() time.Time
+}
+
 // CronJobReconciler reconciles a CronJob object
 type CronJobReconciler struct {
 	client.Client
 	Scheme *runtime.Scheme
+	Clock
 }
+
+var scheduledTimeAnnotation = "batch.hamza-test.io"
 
 //+kubebuilder:rbac:groups=batch.hamza-test.io,resources=cronjobs,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=batch.hamza-test.io,resources=cronjobs/status,verbs=get;update;patch
@@ -47,7 +62,7 @@ type CronJobReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.14.1/pkg/reconcile
 func (r *CronJobReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	_ = log.FromContext(ctx)
+	log = log.FromContext(ctx)
 
 	// TODO(user): your logic here
 
@@ -56,7 +71,5 @@ func (r *CronJobReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *CronJobReconciler) SetupWithManager(mgr ctrl.Manager) error {
-	return ctrl.NewControllerManagedBy(mgr).
-		For(&batchv1.CronJob{}).
-		Complete(r)
+	return ctrl.NewControllerManagedBy(mgr).For(&batchv1.CronJob{}).Complete(r)
 }
