@@ -65,8 +65,14 @@ func (r *CronJobReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	log = log.FromContext(ctx)
 
 	// TODO(user): your logic here
+	//load cronjob by name
+	var cronJob batchv1.CronJob
 
-	return ctrl.Result{}, nil
+	if err := r.Get(ctx, req.NamespacedName, &cronJob); err != nil {
+		log.Log.Error(err, "unable to fetch CronJob")
+		return ctrl.Result{}, client.IgnoreNotFound(err)
+	}
+
 }
 
 // SetupWithManager sets up the controller with the Manager.
