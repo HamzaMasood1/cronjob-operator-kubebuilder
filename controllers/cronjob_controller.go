@@ -20,6 +20,7 @@ import (
 	"context"
 	"time"
 
+	kbatch "k8s.io/api/batch/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -65,12 +66,18 @@ func (r *CronJobReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	log = log.FromContext(ctx)
 
 	// TODO(user): your logic here
-	//load cronjob by name
+	//1. load cronjob by name
 	var cronJob batchv1.CronJob
 
 	if err := r.Get(ctx, req.NamespacedName, &cronJob); err != nil {
 		log.Log.Error(err, "unable to fetch CronJob")
 		return ctrl.Result{}, client.IgnoreNotFound(err)
+	}
+	//2. List all active jobs and update the status
+	var childJobs kbatch.JobList
+	if err := r.List(ctx, &childJobs, client.InNamespace(req.Namespace), client.MatchingFields{jobOwnerKey: req.Name}); err != nil {
+		log.Error(err, "unable to list child Jobs")
+		return ctrl.Result{}, err
 	}
 
 }
